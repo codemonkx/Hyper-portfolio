@@ -291,7 +291,7 @@ function Terminal({ workspace, onClose, fullscreenRef }) {
 
   return (
     <div 
-      className={`terminal-window ${isFullscreen ? 'fullscreen' : ''} ${isMinimized && !isFullscreen ? 'minimized' : ''} ${isAnimatingIn ? 'animating-in' : ''} ${isAnimatingOut ? 'animating-exit' : ''}`} 
+      className={`terminal-window ${isFullscreen ? 'fullscreen' : ''} ${isMinimized && !isFullscreen ? 'minimized' : ''} ${isAnimatingIn ? 'animating-in' : ''} ${isAnimatingOut ? 'animating-exit' : ''} ${isDragging ? 'dragging' : ''}`} 
       style={{
         left: `${position.x}px`,
         top: `${position.y}px`,
@@ -485,7 +485,7 @@ function Terminal({ workspace, onClose, fullscreenRef }) {
           ) : line.type === 'neofetch' ? (
             <div key={i} className="neofetch-container">
               <div className="neofetch-left">
-                <img src="/profile.jpg" alt="Nithin" className="profile-image" />
+                <img src="/Images/profile.jpg" alt="Nithin" className="profile-image" />
                 <div className="profile-name">Nithin</div>
                 <div className="profile-role">Data Science</div>
               </div>
@@ -509,7 +509,7 @@ function Terminal({ workspace, onClose, fullscreenRef }) {
                   <div className="neofetch-section-title">Skills</div>
                   <div className="skill-item">React.js, JavaScript, TypeScript</div>
                   <div className="skill-item">Node.js, Express</div>
-                  <div className="skill-item">Linux, Arch, Hyprland</div>
+                  <div className="skill-item">Linux</div>
                   <div className="skill-item">Git, Docker</div>
                 </div>
 

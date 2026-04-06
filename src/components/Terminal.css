@@ -10,15 +10,18 @@
   display: flex;
   flex-direction: column;
   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.8);
-  will-change: transform;
-  transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1), 
-              left 0.25s cubic-bezier(0.4, 0, 0.2, 1), 
-              top 0.25s cubic-bezier(0.4, 0, 0.2, 1), 
-              width 0.25s cubic-bezier(0.4, 0, 0.2, 1), 
-              height 0.25s cubic-bezier(0.4, 0, 0.2, 1),
-              box-shadow 0.25s ease, 
-              border-radius 0.25s ease, 
+  transition: box-shadow 0.25s ease, 
+              border-radius 0.3s ease, 
               border-color 0.25s ease;
+}
+
+.terminal-window.dragging {
+  transition: none;
+  cursor: grabbing;
+}
+
+.terminal-window.fullscreen {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 @media (max-width: 768px) {
@@ -133,6 +136,10 @@
 }
 
 .terminal-header:active {
+  cursor: grabbing;
+}
+
+.terminal-window.dragging .terminal-header {
   cursor: grabbing;
 }
 
