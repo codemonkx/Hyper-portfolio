@@ -23,9 +23,11 @@ body {
   color: var(--text-primary);
   overflow: hidden;
   height: 100vh;
+  height: 100dvh;
 }
 
 #root {
   width: 100%;
   height: 100vh;
+  height: 100dvh;
 }

@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import './Terminal.css'
 
-function Terminal({ workspace, onClose }) {
+function Terminal({ workspace, onClose, fullscreenRef }) {
   const [input, setInput] = useState('')
   const [history, setHistory] = useState([])
   const [commandHistory, setCommandHistory] = useState([])
@@ -15,8 +15,14 @@ function Terminal({ workspace, onClose }) {
   const [size, setSize] = useState({ width: 750, height: 550 })
   const [isDragging, setIsDragging] = useState(false)
   const [isResizing, setIsResizing] = useState(false)
+  const [isFullscreen, setIsFullscreen] = useState(false)
+  const [isAnimatingIn, setIsAnimatingIn] = useState(false)
+  const [isAnimatingOut, setIsAnimatingOut] = useState(false)
+  const [isMinimized, setIsMinimized] = useState(false)
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 })
   const [resizeStart, setResizeStart] = useState({ x: 0, y: 0, width: 0, height: 0 })
+  const [savedPosition, setSavedPosition] = useState({ x: 0, y: 0 })
+  const [savedSize, setSavedSize] = useState({ width: 750, height: 550 })
   const terminalRef = useRef(null)
   const inputRef = useRef(null)
   const headerRef = useRef(null)
@@ -165,20 +171,31 @@ function Terminal({ workspace, onClose }) {
 
   const handleMouseDown = (e) => {
     if (e.target.closest('.terminal-header')) {
-      setIsDragging(true)
-      setDragOffset({
-        x: e.clientX - position.x,
-        y: e.clientY - position.y
-      })
+      if (!isFullscreen) {
+        setDragOffset({
+          x: e.clientX - position.x,
+          y: e.clientY - position.y
+        })
+        setIsDragging(true)
+      }
     }
   }
 
   const handleMouseMove = (e) => {
     if (isDragging) {
-      setPosition({
-        x: e.clientX - dragOffset.x,
-        y: e.clientY - dragOffset.y
-      })
+      const newX = e.clientX - dragOffset.x
+      const newY = e.clientY - dragOffset.y
+      setPosition({ x: newX, y: newY })
+      
+      if (newY <= 40) {
+        setSavedPosition({ x: newX, y: newY })
+        setSavedSize(size)
+        setPosition({ x: 0, y: 0 })
+        setSize({ width: window.innerWidth, height: window.innerHeight - 40 })
+        setIsFullscreen(true)
+        if (fullscreenRef) fullscreenRef.current = true
+        setIsDragging(false)
+      }
     }
     if (isResizing) {
       const newWidth = Math.max(400, resizeStart.width + (e.clientX - resizeStart.x))
@@ -210,6 +227,57 @@ function Terminal({ workspace, onClose }) {
     }
   }
 
+  const handleMinimize = (e) => {
+    e.stopPropagation()
+    if (isFullscreen) {
+      setPosition(savedPosition)
+      setSize(savedSize)
+      setIsFullscreen(false)
+      if (fullscreenRef) fullscreenRef.current = false
+    }
+    if (isMinimized) {
+      setPosition(savedPosition)
+      setSize(savedSize)
+      setIsMinimized(false)
+    } else {
+      setSavedPosition(position)
+      setSavedSize(size)
+      setPosition({ x: window.innerWidth - 200, y: window.innerHeight - 80 })
+      setSize({ width: 150, height: 40 })
+      setIsMinimized(true)
+    }
+  }
+
+  const handleDoubleClick = (e) => {
+    if (e.target.closest('.terminal-header')) {
+      if (isFullscreen) {
+        setIsAnimatingOut(true)
+        setTimeout(() => {
+          setPosition(savedPosition)
+          setSize(savedSize)
+        }, 50)
+        setTimeout(() => {
+          if (fullscreenRef) fullscreenRef.current = false
+          setIsFullscreen(false)
+          setIsAnimatingOut(false)
+        }, 300)
+      } else {
+        setSavedPosition(position)
+        setSavedSize(size)
+        setIsAnimatingIn(true)
+        setIsFullscreen(true)
+        setTimeout(() => {
+          setPosition({ x: 0, y: 0 })
+          setSize({ width: window.innerWidth, height: window.innerHeight - 40 })
+          if (fullscreenRef) fullscreenRef.current = true
+        }, 20)
+        setTimeout(() => {
+          setIsAnimatingIn(false)
+        }, 250)
+      }
+    }
+  }
+
   useEffect(() => {
     if (isDragging || isResizing) {
       window.addEventListener('mousemove', handleMouseMove)
@@ -223,7 +291,7 @@ function Terminal({ workspace, onClose }) {
 
   return (
     <div 
-      className="terminal-window" 
+      className={`terminal-window ${isFullscreen ? 'fullscreen' : ''} ${isMinimized && !isFullscreen ? 'minimized' : ''} ${isAnimatingIn ? 'animating-in' : ''} ${isAnimatingOut ? 'animating-exit' : ''}`} 
       style={{
         left: `${position.x}px`,
         top: `${position.y}px`,
@@ -236,10 +304,11 @@ function Terminal({ workspace, onClose }) {
         className="terminal-header"
         ref={headerRef}
         onMouseDown={handleMouseDown}
+        onDoubleClick={handleDoubleClick}
       >
         <div className="terminal-buttons">
           <span className="btn close" onClick={handleClose}></span>
-          <span className="btn minimize"></span>
+          <span className="btn minimize" onClick={handleMinimize}></span>
           <span className="btn maximize"></span>
         </div>
         <div className="terminal-title">user@portfolio:~/{workspace}</div>
@@ -256,7 +325,7 @@ function Terminal({ workspace, onClose }) {
               <div className="about-content">
                 <div className="about-card">
                   <div className="about-text">
-                    <p>Hi! I'm <span className="highlight">Nithin</span>, a passionate <span className="highlight">Java Developer </span> from Tiruppur, India.</p>
+                    <p>Hi! I'm <span className="highlight">Nithin</span>, a passionate <span className="highlight">Java Developer </span> from Bangalore, India.</p>
                     <p>I love creating unique and innovative web experiences that blend functionality with beautiful design. This portfolio is inspired by the minimalist aesthetic of Arch Linux and Hyprland window manager.</p>
                     <p>I specialize in building modern web applications using React, Node.js, and exploring machine learning technologies. Always eager to learn new technologies and take on challenging projects.</p>
                   </div>
@@ -289,13 +358,13 @@ function Terminal({ workspace, onClose }) {
                   </div>
                 </a>
                 
-                <a href="https://github.com/nithinx02" target="_blank" rel="noopener noreferrer" className="contact-card">
+                <a href="https://github.com/codemonkx" target="_blank" rel="noopener noreferrer" className="contact-card">
                   <div className="contact-icon">
                     <img src="/github-logo.svg" alt="GitHub" style={{width: '32px', height: '32px', filter: 'invert(1)'}} />
                   </div>
                   <div className="contact-info">
                     <div className="contact-label">GitHub</div>
-                    <div className="contact-value">@nithinx02</div>
+                    <div className="contact-value">@codemonkx</div>
                   </div>
                 </a>
                 
@@ -313,7 +382,7 @@ function Terminal({ workspace, onClose }) {
                   <div className="contact-icon">📍</div>
                   <div className="contact-info">
                     <div className="contact-label">Location</div>
-                    <div className="contact-value">Tiruppur, India</div>
+                    <div className="contact-value">Bangalore, India</div>
                   </div>
                 </div>
               </div>
@@ -368,55 +437,49 @@ function Terminal({ workspace, onClose }) {
             <div key={i} className="projects-container">
               <div className="projects-header">📂 My Projects</div>
               <div className="projects-grid">
-                {/* 
-                  TO ADD YOUR PROJECTS:
-                  1. Go to https://github.com/nithinx02
-                  2. Copy your repository names
-                  3. Replace the project cards below with your actual projects
-                  
-                  Template:
-                  <div className="project-card">
-                    <div className="project-title">🎨 Project Name</div>
-                    <div className="project-desc">Your project description</div>
-                    <div className="project-tech">Tech Stack Here</div>
-                    <a href="https://github.com/nithinx02/repo-name" target="_blank" rel="noopener noreferrer" className="project-link">View on GitHub →</a>
-                  </div>
-                */}
                 
                 <div className="project-card">
-                  <div className="project-title">🎨 Hyprland Portfolio</div>
-                  <div className="project-desc">A modern portfolio website inspired by Arch Linux + Hyprland aesthetic with interactive terminal</div>
-                  <div className="project-tech">React.js • Vite • CSS</div>
-                  <a href="https://github.com/nithinx02" target="_blank" rel="noopener noreferrer" className="project-link">View on GitHub →</a>
+                  <div className="project-title">🎵 PacTune</div>
+                  <div className="project-desc">A simple and beautiful music player for Linux. Built with Rust and GTK4 for a fast and smooth experience with album artwork display and synchronized lyrics.</div>
+                  <div className="project-tech">Rust • GTK4 • GStreamer</div>
+                  <a href="https://github.com/codemonkx/PacTune" target="_blank" rel="noopener noreferrer" className="project-link">View on GitHub →</a>
+                </div>
+                
+                <div className="project-card">
+                  <div className="project-title">🌐 PacTune Website</div>
+                  <div className="project-desc">The official landing page for PacTune. Clean, fast, and beautiful website showcasing features like album grid view, synchronized lyrics, and MPRIS support.</div>
+                  <div className="project-tech">HTML5 • CSS3 • JavaScript</div>
+                  <a href="https://github.com/codemonkx/PacTune-website" target="_blank" rel="noopener noreferrer" className="project-link">View on GitHub →</a>
                 </div>
                 
                 <div className="project-card">
                   <div className="project-title">♻️ Eco-Waste</div>
-                  <div className="project-desc">A waste management application built with modern web technologies</div>
+                  <div className="project-desc">A waste management application to track and manage waste disposal and recycling. Helps promote sustainable practices through technology.</div>
                   <div className="project-tech">TypeScript • JavaScript • CSS</div>
-                  <a href="https://github.com/nithinx02/eco-waste" target="_blank" rel="noopener noreferrer" className="project-link">View on GitHub →</a>
-                </div>
-                
-                <div className="project-card">
-                  <div className="project-title">🧠 Brain Tumor Prediction</div>
-                  <div className="project-desc">Machine learning model for brain tumor detection and prediction using medical imaging</div>
-                  <div className="project-tech">Python • Machine Learning • AI</div>
-                  <a href="https://github.com/nithinx02/Brain-Tumor-prediction" target="_blank" rel="noopener noreferrer" className="project-link">View on GitHub →</a>
+                  <a href="https://github.com/codemonkx/eco-waste" target="_blank" rel="noopener noreferrer" className="project-link">View on GitHub →</a>
                 </div>
                 
                 <div className="project-card">
                   <div className="project-title">🌿 Herb Vista</div>
-                  <div className="project-desc">A web application for exploring and learning about medicinal herbs and plants</div>
+                  <div className="project-desc">A web application for exploring and learning about medicinal herbs and plants. Discover the healing properties of natural herbs.</div>
                   <div className="project-tech">HTML • CSS • JavaScript</div>
-                  <a href="https://github.com/nithinx02/herb-vista" target="_blank" rel="noopener noreferrer" className="project-link">View on GitHub →</a>
+                  <a href="https://github.com/codemonkx/herb-vista" target="_blank" rel="noopener noreferrer" className="project-link">View on GitHub →</a>
                 </div>
                 
                 <div className="project-card">
                   <div className="project-title">💰 Money Crafter</div>
-                  <div className="project-desc">A financial management and budgeting application to track expenses and manage money</div>
-                  <div className="project-tech">SCSS • JavaScript • HTML • CSS</div>
-                  <a href="https://github.com/nithinx02/Money-Crafter" target="_blank" rel="noopener noreferrer" className="project-link">View on GitHub →</a>
+                  <div className="project-desc">A financial management and budgeting application to track expenses and manage money. Take control of your finances with ease.</div>
+                  <div className="project-tech">HTML • CSS • JavaScript</div>
+                  <a href="https://github.com/codemonkx/Money-Crafter" target="_blank" rel="noopener noreferrer" className="project-link">View on GitHub →</a>
                 </div>
+
+                <div className="project-card">
+                  <div className="project-title">🧠 Brain Tumor Prediction</div>
+                  <div className="project-desc">Machine learning model for brain tumor detection using MRI images. Uses deep learning to identify and classify brain tumors from medical imaging data.</div>
+                  <div className="project-tech">Python • Machine Learning • AI</div>
+                  <a href="https://github.com/codemonkx/Brain-Tumor-prediction" target="_blank" rel="noopener noreferrer" className="project-link">View on GitHub →</a>
+                </div>
+                
               </div>
             </div>
           ) : line.type === 'neofetch' ? (
@@ -424,7 +487,7 @@ function Terminal({ workspace, onClose }) {
               <div className="neofetch-left">
                 <img src="/profile.jpg" alt="Nithin" className="profile-image" />
                 <div className="profile-name">Nithin</div>
-                <div className="profile-role">Full Stack Developer</div>
+                <div className="profile-role">Data Science</div>
               </div>
               <div className="neofetch-right">
                 <div className="neofetch-header">nithin@portfolio</div>
@@ -433,7 +496,7 @@ function Terminal({ workspace, onClose }) {
                   <div className="neofetch-info">
                     <div className="info-row">
                       <span className="info-label">📍 Location</span>
-                      <span className="info-value">Tiruppur, India</span>
+                      <span className="info-value">Bangalore, India</span>
                     </div>
                     <div className="info-row">
                       <span className="info-label">📧 Email</span>
@@ -452,8 +515,8 @@ function Terminal({ workspace, onClose }) {
 
                 <div className="neofetch-section">
                   <div className="neofetch-section-title">Links</div>
-                  <a href="https://github.com/nithinx02" target="_blank" rel="noopener noreferrer" className="link-item">
-                    GitHub: github.com/nithinx02
+                  <a href="https://github.com/codemonkx" target="_blank" rel="noopener noreferrer" className="link-item">
+                    GitHub: github.com/codemonkx
                   </a>
                   <a href="https://www.linkedin.com/in/nithin-devigner/" target="_blank" rel="noopener noreferrer" className="link-item">
                     LinkedIn: linkedin.com/in/nithin-devigner

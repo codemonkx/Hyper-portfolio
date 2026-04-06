@@ -15,12 +15,34 @@
     inset 0 1px 0 rgba(255, 255, 255, 0.05);
 }
 
+@media (max-width: 768px) {
+  .waybar {
+    padding: 0 10px;
+    height: 45px;
+  }
+}
+
 .waybar-left,
 .waybar-center,
 .waybar-right {
   display: flex;
   align-items: center;
   gap: 8px;
+}
+
+@media (max-width: 768px) {
+  .waybar-left {
+    gap: 4px;
+  }
+  
+  .waybar-module.gmail,
+  .waybar-module.battery {
+    display: none;
+  }
+  
+  .waybar-module.volume {
+    display: none;
+  }
 }
 
 .waybar-logo {
@@ -127,6 +149,19 @@
   justify-content: center;
 }
 
+@media (max-width: 768px) {
+  .waybar-module {
+    padding: 5px 10px;
+    font-size: 12px;
+    min-width: auto;
+  }
+  
+  .social-icon {
+    width: 16px;
+    height: 16px;
+  }
+}
+
 .waybar-module:hover {
   background: rgba(24, 24, 37, 0.6);
   border-color: rgba(137, 180, 250, 0.25);
@@ -175,6 +210,17 @@
   letter-spacing: 0.5px;
 }
 
+@media (max-width: 768px) {
+  .waybar-center {
+    position: static;
+    transform: none;
+  }
+  
+  .waybar-name {
+    font-size: 14px;
+  }
+}
+
 .waybar-module.weather-time {
   background: rgba(137, 180, 250, 0.15);
   backdrop-filter: blur(15px);
@@ -184,6 +230,17 @@
   min-width: 150px;
   letter-spacing: 0.3px;
   gap: 8px;
+}
+
+@media (max-width: 768px) {
+  .waybar-module.weather-time {
+    min-width: auto;
+    padding: 6px 10px;
+  }
+  
+  .waybar-module.weather-time span:first-of-type {
+    display: none;
+  }
 }
 
 .waybar-module.weather-time .icon {

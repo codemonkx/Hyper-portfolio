@@ -4,4 +4,11 @@
   display: flex;
   flex-direction: column;
   background-color: var(--bg-primary);
+  overflow: hidden;
+}
+
+@media (max-width: 768px) {
+  .hyprland-container {
+    height: 100dvh;
+  }
 }

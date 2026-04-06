@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import './Waybar.css'
 
-function Waybar({ activeWorkspace, setActiveWorkspace, showTerminal, setShowTerminal }) {
+function Waybar({ activeWorkspace, setActiveWorkspace, showTerminal, setShowTerminal, onToggleTerminal }) {
   const [time, setTime] = useState(new Date())
 
   useEffect(() => {
@@ -29,7 +29,7 @@ function Waybar({ activeWorkspace, setActiveWorkspace, showTerminal, setShowTerm
           <img src="/linkedin-logo.svg" alt="LinkedIn" className="social-icon" />
         </a>
         <a 
-          href="https://github.com/nithinx02" 
+          href="https://github.com/codemonkx" 
           target="_blank" 
           rel="noopener noreferrer"
           className="waybar-module social-link github"
@@ -53,7 +53,7 @@ function Waybar({ activeWorkspace, setActiveWorkspace, showTerminal, setShowTerm
       <div className="waybar-right">
         <button 
           className="waybar-module console"
-          onClick={() => setShowTerminal(!showTerminal)}
+          onClick={onToggleTerminal}
           title={showTerminal ? "Hide Terminal" : "Show Terminal"}
         >
           <img src="/terminal-icon.svg" alt="Terminal" className="social-icon" />
@@ -68,7 +68,7 @@ function Waybar({ activeWorkspace, setActiveWorkspace, showTerminal, setShowTerm
         </div>
         <div className="waybar-module weather-time">
           <span className="icon">📍</span>
-          <span>Tiruppur</span>
+          <span>Bangalore</span>
           <span className="time-separator">•</span>
           <span>{time.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}</span>
         </div>
